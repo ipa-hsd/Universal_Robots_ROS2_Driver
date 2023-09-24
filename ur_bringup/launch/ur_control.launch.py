@@ -29,6 +29,7 @@
 #
 # Author: Denis Stogl
 
+from launch_ros.descriptions import ParameterValue
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.actions import OpaqueFunction
@@ -91,89 +92,14 @@ def launch_setup(context, *args, **kwargs):
         [FindPackageShare("ur_robot_driver"), "resources", "rtde_output_recipe.txt"]
     )
 
-    robot_description_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution([FindPackageShare(description_package), "urdf", description_file]),
-            " ",
-            "robot_ip:=",
-            robot_ip,
-            " ",
-            "joint_limit_params:=",
-            joint_limit_params,
-            " ",
-            "kinematics_params:=",
-            kinematics_params,
-            " ",
-            "physical_params:=",
-            physical_params,
-            " ",
-            "visual_params:=",
-            visual_params,
-            " ",
-            "safety_limits:=",
-            safety_limits,
-            " ",
-            "safety_pos_margin:=",
-            safety_pos_margin,
-            " ",
-            "safety_k_position:=",
-            safety_k_position,
-            " ",
-            "name:=",
-            ur_type,
-            " ",
-            "script_filename:=",
-            script_filename,
-            " ",
-            "input_recipe_filename:=",
-            input_recipe_filename,
-            " ",
-            "output_recipe_filename:=",
-            output_recipe_filename,
-            " ",
-            "tf_prefix:=",
-            tf_prefix,
-            " ",
-            "use_fake_hardware:=",
-            use_fake_hardware,
-            " ",
-            "fake_sensor_commands:=",
-            fake_sensor_commands,
-            " ",
-            "headless_mode:=",
-            headless_mode,
-            " ",
-            "use_tool_communication:=",
-            use_tool_communication,
-            " ",
-            "tool_parity:=",
-            tool_parity,
-            " ",
-            "tool_baud_rate:=",
-            tool_baud_rate,
-            " ",
-            "tool_stop_bits:=",
-            tool_stop_bits,
-            " ",
-            "tool_rx_idle_chars:=",
-            tool_rx_idle_chars,
-            " ",
-            "tool_tx_idle_chars:=",
-            tool_tx_idle_chars,
-            " ",
-            "tool_device_name:=",
-            tool_device_name,
-            " ",
-            "tool_tcp_port:=",
-            tool_tcp_port,
-            " ",
-            "tool_voltage:=",
-            tool_voltage,
-            " ",
-        ]
-    )
+    robot_description_content = ParameterValue( Command(['xacro ',
+        FindPackageShare(description_package), "/", description_file,
+        " ", "robot_ip:=", robot_ip,
+        " ", "script_filename:=", script_filename,
+        " ", "input_recipe_filename:=", input_recipe_filename,
+        " ", "output_recipe_filename:=", output_recipe_filename,
+        " ", "hash_kinematics:=", "calib_12788084448423163542"]),
+        value_type=str)
     robot_description = {"robot_description": robot_description_content}
 
     initial_joint_controllers = PathJoinSubstitution(
@@ -329,36 +255,24 @@ def launch_setup(context, *args, **kwargs):
         dashboard_client_node,
         tool_communication_node,
         controller_stopper_node,
+        urscript_interface,
         robot_state_publisher_node,
         rviz_node,
-        joint_state_broadcaster_spawner,
-        io_and_status_controller_spawner,
-        speed_scaling_state_broadcaster_spawner,
-        force_torque_sensor_broadcaster_spawner,
-        forward_position_controller_spawner_stopped,
         initial_joint_controller_spawner_stopped,
         initial_joint_controller_spawner_started,
-    ]
+    ] + controller_spawners
 
     return nodes_to_start
 
 
 def generate_launch_description():
-    print(
-        "\033[91m"
-        "DEPRECATION WARNING: "
-        "Launch files from the ur_bringup package are deprecated and will be removed from Iron "
-        "Irwini on. Please use the same launch files from the ur_robot_driver package."
-        "\033[0m"
-    )
-
     declared_arguments = []
     # UR specific arguments
     declared_arguments.append(
         DeclareLaunchArgument(
             "ur_type",
             description="Type/series of used UR robot.",
-            choices=["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e"],
+            choices=["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e", "ur20"],
         )
     )
     declared_arguments.append(
